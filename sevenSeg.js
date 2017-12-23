@@ -1,5 +1,19 @@
 ﻿(function(global, $) {
 
+  /*  Pattern:
+0 R1 A   5AA
+1 R2 G  6   4
+2 R3 B  F   B
+3 R4 F   7GG
+4 R5 C  3   1
+5 R6 E  E   C
+6 R7 D   2DD
+        CDEBAFG
+  -> 0b01234567;
+  _BV( 76543210  
+  */
+
+//gfedcba
 var c_aNumberSegments = [0x3F,0x06,0x5B,0x4F,0x66,0x6D,0x7D,0x07,0x7F,0x6F]; //http://en.wikipedia.org/wiki/Seven-segment_display
 var c_sClassSvg = "sevenSeg-svg";
 var c_sClassSegOn = "sevenSeg-segOn";
@@ -20,6 +34,7 @@ options: {
     want displayed.
     */
     value: null,
+    pattern: null,
 
     /**
     Override the default segment on color (Red).  
@@ -101,6 +116,9 @@ _create: function () {
     if(this.options.value) {
         this.displayValue(this.options.value);
     }
+    if(this.options.pattern) {
+        this.displayPattern(this.options.pattern);
+    }
 },
 
 _destroy: function() {
@@ -113,8 +131,42 @@ _setOption: function(key, value){
 	switch(key){
 		case "value":
 			this.displayValue(value);
+            break;
+        case "pattern":
+			this.displayPattern(value);
 			break;
 	}
+},
+
+_convert7toB: function (inbyte) {
+    //6543210
+    //gfedcba in  (7)
+    //CDEBAFG out (Bjoern)
+    // example(0) 0×3F -> 0x7e
+    // example 1  0x06 -> 0x48
+    var out = 0|
+    (inbyte & 1<<6)>>6 |
+    (inbyte & 1<<5)>>4 |
+    (inbyte & 1<<4)>>0 |
+    (inbyte & 1<<3)<<2 |
+    (inbyte & 1<<2)<<4 |
+    (inbyte & 1<<1)<<2 |
+    (inbyte & 1<<0)<<2 ;
+    return out;
+},
+
+_convertBto7: function (inbyte) {
+    // gfedcba out (7)
+    //.CDEBAFG in  (Bjoern)
+    //76543210
+    var out = (inbyte & 1<<6)>>4 |
+              (inbyte & 1<<5)>>2 |
+              (inbyte & 1<<4)>>0 |
+              (inbyte & 1<<3)>>2 |
+              (inbyte & 1<<2)>>2 |
+              (inbyte & 1<<1)<<4 |
+              (inbyte & 1<<0)<<6 ;
+    return out;
 },
 
 /**
@@ -133,6 +185,24 @@ displayValue: function(value, bDecimalPoint) {
     });
     
     self._setSvgElementFill(self.jqSvgElement.find("circle"), bDecimalPoint);
+    return self._convert7toB(segments);
+},
+
+/**
+This is the method to set the digit displayed.
+@param pattern Pattern from flip7seg to display
+*/
+displayPattern: function(pattern) {
+    var self = this;
+    self.options.pattern = pattern;
+    //console.log("pattern: ",pattern);
+    var segments = self._convertBto7(pattern);
+    //console.log("segments:", segments);
+    self.jqSegments.children().each(function(index, element) {                     
+        self._setSvgElementFill($(element), segments & (1 << index));        
+    });
+    
+    self._setSvgElementFill(self.jqSvgElement.find("circle"), 0);
 },
 
 /**
@@ -166,6 +236,7 @@ options: {
     want displayed.
     */
     value: null,
+    pattern: null,
 
     /**
     Defines the number of digits that comprise the array.
@@ -211,8 +282,11 @@ _create: function () {
     }
 
     this.aJqDigits.reverse();
-    this._displayValue(this.options.value);
-    this._bindMouseWheel();
+    if (this.options.value)
+        this._displayValue(this.options.value);
+    if (this.options.pattern)
+        this._displayPattern(this.options.pattern);
+    //this._bindMouseWheel();
 },
 
 _destroy: function() {
@@ -254,12 +328,13 @@ _bindMouseWheel: function () {
 
 _setOption: function(key, value){
 	this.options[key] = value;
- 
 	switch(key){
 		case "value":
 			this._displayValue(value);
 			break;
-        
+        case "pattern":
+            this._displayPattern(value);
+            break;
         // TODO BW : Add other options.
 	}    
 },
@@ -288,6 +363,22 @@ _displayValue: function(value) {
     });
 
     self._trigger("change", null, value);
+},
+
+_displayPattern: function(patterns) {
+    var self = this;
+    var iDigitIdx = self.options.digits;
+    //console.log("pattern:", patterns.toString(16));
+
+    $.each(self.aJqDigits, function(index, jqDigit) {
+        var sDigitValue = patterns & 0xff;
+        patterns = patterns>>8;
+        jqDigit.sevenSegDigit("displayPattern", sDigitValue);
+        //console.log(iDigitIdx, sDigitValue.toString(16), patterns.toString(16));
+        --iDigitIdx;
+    });
+
+    //self._trigger("change", null, value);
 },
 
 /**

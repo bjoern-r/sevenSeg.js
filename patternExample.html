@@ -1,0 +1,75 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+	<title>sevenSeg.js Full Page Demo</title>
+	
+	<link href="http://fonts.googleapis.com/css?family=Iceberg" rel="stylesheet">
+    <link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/themes/ui-darkness/jquery-ui.css" rel="stylesheet">   
+
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.2/jquery.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
+    
+    <script src="sevenSeg.js"></script>
+    <script>
+        $(function () {
+
+            $("#exampleSingle").sevenSegDigit({ pattern: 0x7e, decimalPoint: false});
+            $("#exampleSingleInputPattern").keyup(function(event) {
+                    var x = $("#exampleSingleInputPattern").val();
+                    $("#exampleSingle").sevenSegDigit({ pattern: x });
+            });
+            $("#exampleSingleInputNumber").keyup(function(event) {
+                    var x = $("#exampleSingleInputNumber").val();
+                    $("#exampleSingle").sevenSegDigit({ value: x });
+            });
+            
+            $("#exampleArray").sevenSeg({ digits: 4, pattern: 0x7e7a7f06, decimalPoint: false });
+            $("#exampleArrayInput").keyup(function(event) {
+                    var x = $("#exampleArrayInput").val();
+                    $("#exampleArray").sevenSeg({ pattern: x});
+            });
+        });
+    </script>
+    <style>
+		.exampleContainer
+		{
+			display: inline-block;
+			background-color: Black;
+			border-radius: 5px;
+            margin-left: 18px;
+            margin-right: 18px;
+		}
+	    .big-sevenSeg
+	    {
+			padding: 0.5em; 
+			height: 50px; 
+			width: 80px;
+	    }
+        .med-sevenSegArray5
+	    {
+	        padding: 0.25em;
+	        height: 50px;
+	        width: 160px;
+	    }
+        .valueInput
+        {
+            width: 50px;
+        }
+    </style>
+</head>
+<body>
+        <div class="exampleContainer">
+            <div id="exampleSingle" class="big-sevenSeg"></div>
+            <input class="valueInput" id="exampleSingleInputPattern" type=text value="0x7e"/>
+            <input class="valueInput" id="exampleSingleInputNumber" type=text value="3"/>
+        </div>
+        <div>
+            <div class="exampleContainer">
+                <div id="exampleArray" class="med-sevenSegArray5"></div>
+            </div>
+            <input style="width: 8em;" id="exampleArrayInput" value="0x7e7a7f06"/>
+        </div>
+</body>
+</html>
